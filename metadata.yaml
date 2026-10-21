@@ -1,0 +1,6 @@
+name: astrbot_plugin_my_memory
+display_name: 我的记忆插件
+desc: 一个基于SQLite的长期记忆系统
+version: 1.0.0
+author: Imitator
+repo: https://github.com/Imitator114/astrbot_plugin_my_memory
