@@ -1,6 +1,6 @@
 name: astrbot_plugin_my_memory
-display_name: 我的记忆插件
-desc: 一个基于SQLite的长期记忆系统
-version: 1.0.0
+display_name: 长期记忆管理
+desc: 基于 SQLite 与 Function Calling 的长期记忆模块。支持上下文静默注入、多群组物理隔离与记忆召回。
+version: 1.0.1
 author: Imitator
 repo: https://github.com/Imitator114/astrbot_plugin_my_memory

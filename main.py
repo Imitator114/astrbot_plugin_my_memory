@@ -40,7 +40,7 @@ class MyMemoryPlugin(Star):
     async def remember(self,event:AstrMessageEvent):
         """处理 记住 指令"""
         user_id = event.get_sender_id()
-        group_id = event.get_group_id()
+        group_id = event.get_group_id() or "private"
 
         content = event.message_str.replace("记住","").strip()
         if not content:
@@ -73,17 +73,24 @@ class MyMemoryPlugin(Star):
 
         if at_list:
             if sender_id != admin_QQ:
-                yield event.plain_result("哼，你又不是管理员，凭什么查别人的记忆？")
+                yield event.plain_result("只有管理员才能查看别人的记忆哦")
                 return 
             else:
                 target_id = str(at_list[0])
 
         try:
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute(
-                    "SELECT content,created_at FROM memories WHERE user_id = ? AND group_id = ? ORDER BY created_at DESC",
-                    (target_id,group_id)
-                )
+                if group_id == "private":
+                    cursor = conn.execute(
+                        "SELECT content,created_at FROM memories WHERE user_id = ? ORDER BY created_at DESC",
+                        (target_id,)
+                    )
+
+                else:
+                    cursor = conn.execute(
+                        "SELECT content,created_at FROM memories WHERE user_id = ? AND group_id = ? ORDER BY created_at DESC",
+                        (target_id,group_id)
+                    )
                 rows = cursor.fetchall()
 
             if not rows:
@@ -110,7 +117,7 @@ class MyMemoryPlugin(Star):
             
 
         user_id = event.get_sender_id()
-        group_id = event.get_group_id()
+        group_id = event.get_group_id() or "private"
 
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -130,7 +137,7 @@ class MyMemoryPlugin(Star):
     async def inject_memory(self,event:AstrMessageEvent,req):
         """当用户对话时，先确认发送者，再调取最近5条记忆并注入"""
         user_id = event.get_sender_id()
-        group_id = event.get_group_id()
+        group_id = event.get_group_id() or "private"
         sender_name = event.get_sender_name()
         at_list = self.get_at_qq(event)
         identity_prompt = f"""
@@ -146,10 +153,17 @@ class MyMemoryPlugin(Star):
 
         try:
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute(
-                    "SELECT content FROM memories WHERE user_id = ? AND group_id = ? ORDER BY created_at DESC LIMIT 5",
-                    (user_id, group_id)
-                )
+                if group_id == "private":
+                    cursor = conn.execute(
+                        "SELECT content FROM memories WHERE user_id = ? ORDER BY created_at DESC LIMIT 5",
+                        (user_id,)
+                    )
+
+                else: 
+                    cursor = conn.execute(
+                        "SELECT content FROM memories WHERE user_id = ? AND group_id = ? ORDER BY created_at DESC LIMIT 5",
+                        (user_id, group_id)
+                    )
                 rows = cursor.fetchall()
             if rows:
                 memory_text = "\n".join(f"-{row[0]}" for row in rows)
@@ -176,10 +190,17 @@ class MyMemoryPlugin(Star):
         sender_name = event.get_sender_name()
         try:
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute(
-                    "SELECT content from memories WHERE user_id = ? AND group_id = ? ORDER BY created_at DESC LIMIT 10",
-                    (user_id,group_id)
+                if group_id == "private":
+                    cursor = conn.execute(
+                        "SELECT content FROM memories WHERE user_id = ? ORDER BY created_at DESC LIMIT 10",
+                        (user_id,)
                     )
+
+                else: 
+                    cursor = conn.execute(
+                        "SELECT content from memories WHERE user_id = ? AND group_id = ? ORDER BY created_at DESC LIMIT 10",
+                        (user_id,group_id)
+                        )
                 rows = cursor.fetchall()
             if not rows:
                 return f"没有关于用户【{sender_name}】的任何记忆，可自然调侃回复"
